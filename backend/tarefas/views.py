@@ -1,22 +1,31 @@
-from django.shortcuts import render
+from rest_framework import generics
+from .models import Project, User, Task, Comment
+from .serializers import (
+    ProjectSerializer,
+    UserSerializer,
+    TaskSerializer,
+    CommentSerializer,
+)
 
-from django.urls import path
-from . import views
+class TaskAPIView(APIView):
+    def get(self, request):
+        # buscar todas as tarefas no MongoDB
+        pass
 
-urlpatterns = [
-    # Projects
-    path("projects/", views.ProjectListCreateAPIView.as_view(), name="project-list-create"),
-    path("projects/<int:pk>/", views.ProjectRetrieveUpdateDestroyAPIView.as_view(), name="project-detail"),
+    def post(self, request):
+        # criar uma tarefa
+        pass
 
-    # Users
-    path("users/", views.UserListCreateAPIView.as_view(), name="user-list-create"),
-    path("users/<int:pk>/", views.UserRetrieveUpdateDestroyAPIView.as_view(), name="user-detail"),
 
-    # Tasks
-    path("tasks/", views.TaskListCreateAPIView.as_view(), name="task-list-create"),
-    path("tasks/<int:pk>/", views.TaskRetrieveUpdateDestroyAPIView.as_view(), name="task-detail"),
+class TaskDetailAPIView(APIView):
+    def get(self, request, taskId):
+        # buscar tarefa por taskId
+        pass
 
-    # Comments
-    path("comments/", views.CommentListCreateAPIView.as_view(), name="comment-list-create"),
-    path("comments/<int:pk>/", views.CommentRetrieveUpdateDestroyAPIView.as_view(), name="comment-detail"),
-]
+    def put(self, request, taskId):
+        # atualizar tarefa
+        pass
+
+    def delete(self, request, taskId):
+        # excluir tarefa
+        pass
