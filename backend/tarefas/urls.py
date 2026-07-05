@@ -27,3 +27,14 @@ urlpatterns = [
     path("comments/", CommentAPIView.as_view()),  # GET (listar) POST (criar)
     path("comments/<int:commentId>/", CommentDetailAPIView.as_view()),  # GET, PUT/PATCH, DELETE
 ]
+
+'''
+json endpoint comments
+{
+    "commentId": 1,
+    "task": 1,
+    "body": "A tarefa foi concluída com sucesso.",
+    "createdBy": 1,
+    "createdAt": "2026-07-05T01:23:43.106454Z"
+}
+'''
