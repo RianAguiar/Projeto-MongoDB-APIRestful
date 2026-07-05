@@ -321,24 +321,22 @@ class CommentAPIView(APIView):
         serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-
         task = repository.get_task(data["task"])
         if not task:
-            return Response({"detail": "Tarefa informada não existe."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Tarefa informada não existe."},status=status.HTTP_400_BAD_REQUEST)
 
         project = repository.get_project(task["project"])
 
-        # regra: só quem participa do projeto da tarefa pode comentar nela
         if not project or not repository.is_project_member(project, data["createdBy"]):
-            return Response(
-                {"detail": "Usuário 'createdBy' não é membro do projeto da tarefa."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"detail": "Usuário 'createdBy' não é membro do projeto da tarefa."},status=status.HTTP_400_BAD_REQUEST,)
+        now = timezone.now()
+        data["createdAt"] = now
+        data["updatedAt"] = now
 
-        data["createdAt"] = timezone.now()
-        data["updatedAt"] = timezone.now()
         created = repository.create_comment(data)
-        return Response(CommentSerializer(created).data, status=status.HTTP_201_CREATED)
+
+        serializer = CommentSerializer(created)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CommentDetailAPIView(APIView):

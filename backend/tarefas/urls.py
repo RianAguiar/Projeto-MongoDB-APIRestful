@@ -58,5 +58,20 @@ json endpoint comments
     "createdAt": "2026-07-05T01:23:43.106454Z"
 }
 
-ENDPOINT TASKS QUEBRADA
+
+json endpoint tasks
+{
+    "taskId": 1,
+    "project": 1,
+    "title": "Criar tela de login",
+    "description": "Tela de autenticação do sistema",
+    "createdBy": 1,
+    "priority": "high",
+    "done": true,
+    "startDate": "2026-07-05T00:00:00Z",
+    "completedAt": "2026-07-05T15:30:00Z",
+    "completedBy": 1,
+    "createdAt": "2026-07-05T01:12:53.285000Z",
+    "updatedAt": "2026-07-05T01:12:53.285000Z"
+}
 '''
