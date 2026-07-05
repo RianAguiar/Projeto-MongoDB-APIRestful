@@ -10,11 +10,7 @@ class User(AbstractUser):
     userId = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=150)
     email = models.EmailField(unique=True)
-    role = models.CharField(
-        max_length=20,
-        choices=Role.choices,
-        default=Role.MEMBER
-    )
+    role = models.CharField(max_length=20,choices=Role.choices,default=Role.MEMBER)
     lastLogin = models.DateTimeField(null=True, blank=True)
     completedTasksCount = models.PositiveIntegerField(default=0)
 

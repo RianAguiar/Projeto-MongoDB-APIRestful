@@ -17,25 +17,27 @@ class TaskSerializer(serializers.Serializer):
 class ProjectSerializer(serializers.Serializer):
     projectId = serializers.IntegerField()
     name = serializers.CharField(max_length=100)
-    description = serializers.CharField(required=False,allow_blank=True)
-    createdBy = serializers.IntegerField()
-    members = serializers.ListField(child=serializers.IntegerField(),required=False)
-    createdAt = serializers.DateTimeField(required=False)
-    updatedAt = serializers.DateTimeField(required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    owner = serializers.IntegerField()
+    users = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False
+    )
 
 class UserSerializer(serializers.Serializer):
     userId = serializers.IntegerField()
-    name = serializers.CharField(max_length=100)
-    username = serializers.CharField(max_length=50)
+    username = serializers.CharField(max_length=150)
+    name = serializers.CharField(max_length=150)
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True,max_length=128)
-    createdAt = serializers.DateTimeField(required=False)
-    updatedAt = serializers.DateTimeField(required=False)
+    role = serializers.ChoiceField(choices=["admin", "member"])
+    lastLogin = serializers.DateTimeField(required=False, allow_null=True)
+    completedTasksCount = serializers.IntegerField(required=False)
+    password = serializers.CharField(write_only=True, max_length=128)
+
 
 class CommentSerializer(serializers.Serializer):
     commentId = serializers.IntegerField()
     task = serializers.IntegerField()
-    user = serializers.IntegerField()
-    content = serializers.CharField()
+    body = serializers.CharField()
+    createdBy = serializers.IntegerField()
     createdAt = serializers.DateTimeField(required=False)
-    updatedAt = serializers.DateTimeField(required=False)
