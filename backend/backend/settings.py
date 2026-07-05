@@ -32,14 +32,12 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'backend.apps.MongoAdminConfig',
-    'backend.apps.MongoAuthConfig',
     'backend.apps.MongoContentTypesConfig',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_mongodb_backend',
     'rest_framework',
-    'django.contrib.auth',
     "corsheaders",
     'tarefas',
 ]
