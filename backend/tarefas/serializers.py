@@ -8,11 +8,11 @@ class TaskSerializer(serializers.Serializer):
     createdBy = serializers.IntegerField()
     priority = serializers.ChoiceField(choices=["low", "medium", "high"])
     done = serializers.BooleanField(default=False)
-    startDate = serializers.DateField()
+    startDate = serializers.DateTimeField()
     completedAt = serializers.DateTimeField(required=False, allow_null=True)
     completedBy = serializers.IntegerField(required=False, allow_null=True)
-    createdAt = serializers.DateTimeField(required=False)
-    updatedAt = serializers.DateTimeField(required=False)
+    createdAt = serializers.DateTimeField(read_only=True)
+    updatedAt = serializers.DateTimeField(read_only=True)
 
 class ProjectSerializer(serializers.Serializer):
     projectId = serializers.IntegerField()
