@@ -29,6 +29,26 @@ urlpatterns = [
 ]
 
 '''
+json endpoint users
+{
+    "userId": 1,
+    "name": "João Silva",
+    "username": "joaosilva",
+    "email": "joao@email.com",
+    "password": "123456",
+    "role": "admin"
+}
+
+
+json endpoint projects
+{
+    "projectId": 1,
+    "name": "Projeto MongoDB",
+    "description": "Projeto de estudos",
+    "owner": 1
+}
+
+
 json endpoint comments
 {
     "commentId": 1,
@@ -37,4 +57,6 @@ json endpoint comments
     "createdBy": 1,
     "createdAt": "2026-07-05T01:23:43.106454Z"
 }
+
+ENDPOINT TASKS QUEBRADA
 '''
