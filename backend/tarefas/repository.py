@@ -1,4 +1,3 @@
-
 from .database import users, projects, tasks, comments
 
 
@@ -14,10 +13,66 @@ def _clean(doc):
     return doc
 
 
+# ---------------- HELPERS DE REGRAS DE NEGÓCIO ----------------
+
+def user_exists(user_id: int) -> bool:
+    return users.find_one({"userId": user_id}) is not None
+
+
+def project_exists(project_id: int) -> bool:
+    return projects.find_one({"projectId": project_id}) is not None
+
+
+def task_exists(task_id: int) -> bool:
+    return tasks.find_one({"taskId": task_id}) is not None
+
+
+def username_or_email_taken(username: str, email: str, exclude_user_id: int = None) -> bool:
+    or_query = {"$or": [{"username": username}, {"email": email}]}
+    if exclude_user_id is not None:
+        query = {"$and": [or_query, {"userId": {"$ne": exclude_user_id}}]}
+    else:
+        query = or_query
+    return users.find_one(query) is not None
+
+
+def user_owns_any_project(user_id: int) -> bool:
+    return projects.find_one({"owner": user_id}) is not None
+
+
+def is_project_member(project: dict, user_id) -> bool:
+    if project is None or user_id is None:
+        return False
+    return user_id == project.get("owner") or user_id in project.get("users", [])
+
+
+def adjust_completed_tasks_count(user_id, delta: int):
+    if not user_id:
+        return
+    users.update_one({"userId": user_id}, {"$inc": {"completedTasksCount": delta}})
+    user = users.find_one({"userId": user_id})
+    if user and user.get("completedTasksCount", 0) < 0:
+        users.update_one({"userId": user_id}, {"$set": {"completedTasksCount": 0}})
+
+
+def delete_project_cascade(project_id: int) -> bool:
+    task_ids = [t["taskId"] for t in tasks.find({"project": project_id}, {"taskId": 1})]
+    if task_ids:
+        comments.delete_many({"task": {"$in": task_ids}})
+    tasks.delete_many({"project": project_id})
+    return projects.delete_one({"projectId": project_id}).deleted_count > 0
+
+
+def delete_task_cascade(task_id: int) -> bool:
+    comments.delete_many({"task": task_id})
+    return tasks.delete_one({"taskId": task_id}).deleted_count > 0
+
+
 # ---------------- USERS ----------------
 
 def create_user(data: dict) -> dict:
     data["userId"] = _next_id(users, "userId")
+    data.setdefault("completedTasksCount", 0)
     users.insert_one(data)
     return _clean(data)
 
@@ -116,4 +171,3 @@ def update_comment(comment_id: int, data: dict):
 def delete_comment(comment_id: int) -> bool:
     result = comments.delete_one({"commentId": comment_id})
     return result.deleted_count > 0
-
