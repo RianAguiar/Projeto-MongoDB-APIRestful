@@ -1,0 +1,513 @@
+{
+  "info": {
+    "name": "Tarefas API - Testes de Regras de Negócio",
+    "description": "Collection para validar CRUD + regras de negócio da API de tarefas (projects, users, tasks, comments). Rode as pastas em ordem, de cima para baixo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000/api" },
+    { "key": "ownerId", "value": "" },
+    { "key": "memberId", "value": "" },
+    { "key": "outsiderId", "value": "" },
+    { "key": "projectId", "value": "" },
+    { "key": "taskId", "value": "" },
+    { "key": "commentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Setup - Usuários",
+      "item": [
+        {
+          "name": "Criar Owner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gustavo_owner\",\n  \"name\": \"Gustavo Owner\",\n  \"email\": \"gustavo.owner@teste.com\",\n  \"role\": \"admin\",\n  \"password\": \"SenhaForte123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201, usuário criado com completedTasksCount = 0",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('completedTasksCount inicia em 0', () => pm.expect(data.completedTasksCount).to.eql(0));",
+                  "pm.collectionVariables.set('ownerId', data.userId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Membro",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"maria_membro\",\n  \"name\": \"Maria Membro\",\n  \"email\": \"maria.membro@teste.com\",\n  \"role\": \"member\",\n  \"password\": \"SenhaForte123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('memberId', pm.response.json().userId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Outsider (fora do projeto)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"joao_outsider\",\n  \"name\": \"Joao Outsider\",\n  \"email\": \"joao.outsider@teste.com\",\n  \"role\": \"member\",\n  \"password\": \"SenhaForte123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201. Esse usuário existe mas nunca entra no projeto -",
+                  "// serve para provar que a API bloqueia quem não é membro.",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('outsiderId', pm.response.json().userId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Usuário Duplicado (deve falhar)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gustavo_owner\",\n  \"name\": \"Outro Gustavo\",\n  \"email\": \"outro@teste.com\",\n  \"role\": \"member\",\n  \"password\": \"SenhaForte123\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - username 'gustavo_owner' já existe",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Projetos",
+      "item": [
+        {
+          "name": "Criar Projeto com Owner Inexistente (deve falhar)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/projects/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Projeto Fantasma\",\n  \"description\": \"teste\",\n  \"owner\": 9999,\n  \"users\": []\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - usuário 9999 não existe",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Projeto válido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/projects/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Projeto Alpha\",\n  \"description\": \"Projeto de teste\",\n  \"owner\": {{ownerId}},\n  \"users\": [{{memberId}}]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201 - owner entra automaticamente em 'users' junto com o membro",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Owner foi incluído automaticamente em users', () => {",
+                  "  pm.expect(data.users).to.include(parseInt(pm.collectionVariables.get('ownerId')));",
+                  "});",
+                  "pm.collectionVariables.set('projectId', data.projectId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar Projeto criado",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projects/{{projectId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 200, com owner e membro presentes em 'users'",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Tarefas",
+      "item": [
+        {
+          "name": "Criar Tarefa com createdBy fora do projeto (deve falhar)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tasks/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": {{projectId}},\n  \"title\": \"Tarefa Inválida\",\n  \"description\": \"não deveria ser criada\",\n  \"createdBy\": {{outsiderId}},\n  \"priority\": \"medium\",\n  \"done\": false,\n  \"startDate\": \"2026-07-06\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - outsider não é membro do projeto",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar Tarefa válida",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tasks/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": {{projectId}},\n  \"title\": \"Configurar ambiente\",\n  \"description\": \"Preparar o setup inicial\",\n  \"createdBy\": {{memberId}},\n  \"priority\": \"high\",\n  \"done\": false,\n  \"startDate\": \"2026-07-06\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201, done=false, completedBy e completedAt nulos",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.test('Tarefa criada em aberto', () => {",
+                  "  pm.expect(data.done).to.eql(false);",
+                  "  pm.expect(data.completedBy).to.be.null;",
+                  "});",
+                  "pm.collectionVariables.set('taskId', data.taskId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Concluir Tarefa sem completedBy (deve falhar)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tasks/{{taskId}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": {{projectId}},\n  \"title\": \"Configurar ambiente\",\n  \"description\": \"Preparar o setup inicial\",\n  \"createdBy\": {{memberId}},\n  \"priority\": \"high\",\n  \"done\": true,\n  \"startDate\": \"2026-07-06\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - completedBy é obrigatório quando done=true",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Concluir Tarefa corretamente",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tasks/{{taskId}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": {{projectId}},\n  \"title\": \"Configurar ambiente\",\n  \"description\": \"Preparar o setup inicial\",\n  \"createdBy\": {{memberId}},\n  \"priority\": \"high\",\n  \"done\": true,\n  \"completedBy\": {{memberId}},\n  \"startDate\": \"2026-07-06\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 200, completedAt preenchido pelo servidor",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('completedAt foi preenchido', () => pm.expect(data.completedAt).to.not.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conferir contador do usuário (esperado = 1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{memberId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 200, completedTasksCount = 1",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('completedTasksCount = 1', () => pm.expect(pm.response.json().completedTasksCount).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reabrir Tarefa",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/tasks/{{taskId}}/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": {{projectId}},\n  \"title\": \"Configurar ambiente\",\n  \"description\": \"Preparar o setup inicial\",\n  \"createdBy\": {{memberId}},\n  \"priority\": \"high\",\n  \"done\": false,\n  \"startDate\": \"2026-07-06\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 200, completedAt e completedBy voltam a null",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Dados de conclusão limpos', () => {",
+                  "  pm.expect(data.completedAt).to.be.null;",
+                  "  pm.expect(data.completedBy).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conferir contador do usuário (esperado = 0)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{memberId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 200, completedTasksCount voltou a 0 após reabrir a tarefa",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('completedTasksCount = 0', () => pm.expect(pm.response.json().completedTasksCount).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Comentários",
+      "item": [
+        {
+          "name": "Comentar sendo outsider (deve falhar)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/comments/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task\": {{taskId}},\n  \"body\": \"Comentário inválido\",\n  \"createdBy\": {{outsiderId}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - outsider não participa do projeto da tarefa",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Comentar sendo membro válido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/comments/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task\": {{taskId}},\n  \"body\": \"Já iniciei essa tarefa\",\n  \"createdBy\": {{memberId}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 201",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('commentId', pm.response.json().commentId);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Exclusões e Cascata",
+      "item": [
+        {
+          "name": "Excluir Owner (deve falhar - é dono de projeto)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{ownerId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 400 - não pode excluir usuário que é dono de projeto",
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir Tarefa (cascata em comentários)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/tasks/{{taskId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 204",
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conferir que o comentário sumiu junto (cascata)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/comments/{{commentId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 404 - o comentário foi apagado junto com a tarefa",
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir Projeto (cascata em tarefas restantes)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/projects/{{projectId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 204",
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conferir que o projeto sumiu",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/projects/{{projectId}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Esperado: 404",
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

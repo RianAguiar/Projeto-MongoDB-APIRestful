@@ -1,0 +1,7 @@
+antes de rodar os seeders INICIAR O SERVER EM UM TERMINAL SEPARADO
+
+rodar nessa ordem por causa das dependencias
+1    users.py
+2    projects.py
+3   tasks.py
+4    comments.py
