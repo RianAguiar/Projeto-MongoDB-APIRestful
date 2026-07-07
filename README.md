@@ -100,29 +100,18 @@ Cliente (React, Postman, App)
       View (APIView)
             │
             ▼
-      Serializer
- (valida os dados recebidos)
-            │
-            ▼
- Regras de negócio
- (verificações e permissões)
-            │
-            ▼
       Repository
- (operações no MongoDB)
+ (operações no MongoDB)            
             │
             ▼
         MongoDB
             │
             ▼
-      Repository
+      View (APIView)
             │
             ▼
-        View
-            │
-            ▼
-     Serializer
- (transforma em JSON)
+      Serializer
+ (valida os dados recebidos e converte)
             │
             ▼
  HTTP Response
