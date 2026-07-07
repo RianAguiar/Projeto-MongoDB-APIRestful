@@ -85,3 +85,47 @@ python seeders/comments.py
 
 Execute nessa ordem por conta das dependências
 
+## Fluxo de requisição geral
+
+Cliente (React, Postman, App)
+            │
+            │ HTTP Request
+            ▼
+      URL / Endpoint
+            │
+            ▼
+         urls.py
+            │
+            ▼
+      View (APIView)
+            │
+            ▼
+      Serializer
+ (valida os dados recebidos)
+            │
+            ▼
+ Regras de negócio
+ (verificações e permissões)
+            │
+            ▼
+      Repository
+ (operações no MongoDB)
+            │
+            ▼
+        MongoDB
+            │
+            ▼
+      Repository
+            │
+            ▼
+        View
+            │
+            ▼
+     Serializer
+ (transforma em JSON)
+            │
+            ▼
+ HTTP Response
+            │
+            ▼
+Cliente
